@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MODX AIO V5 REMAKE</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f0f0f0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center; /* Center vertically */
+            min-height: 100vh; /* Ensure full viewport height */
+            margin: 0;
+            color: #333;
+        }
+
+        .container {
+            background-color: #fff;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            padding: 20px;
+            width: 90%; /* Responsive width */
+            max-width: 600px; /* Limit width on larger screens */
+        }
+
+        h1 {
+            color: #007bff;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .info-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr); /* Two columns */
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .info-item {
+            text-align: center;
+            padding: 10px;
+            background-color: #f8f9fa; /* Light gray background */
+            border-radius: 5px;
+        }
+
+        .result {
+            font-size: 2.5em;
+            font-weight: bold;
+            margin-top: 10px;
+            text-align: center; /* Center the result */
+        }
+
+        .small-result {
+            color: #007bff;
+        }
+
+        .big-result {
+            color: #dc3545;
+        }
+
+        .chart {
+            margin-top: 20px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            overflow-x: auto;
+        }
+
+        .chart table {
+            width: 100%;
+            border-collapse: collapse;
+            table-layout: fixed;
+        }
+
+        .chart th, .chart td {
+            padding: 12px;
+            text-align: center;
+            border: 1px solid #ddd;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .chart th {
+            background-color: #007bff;
+            color: #fff;
+        }
+
+        .win {
+            color: #28a745;
+        }
+
+        .lose {
+            color: #dc3545;
+        }
+
+        .orange {
+            color: orange;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>MODX AIO V5 REMAKE</h1>
+
+        <div class="info-grid">
+            <div class="info-item">
+                <p>Result:</p>
+                <span id="result" class="result">Loading...</span>
+            </div>
+            <div class="info-item">
+                <p>Current Time:</p>
+                <span id="timeDisplay" class="timer">Loading...</span>
+            </div>
+            <div class="info-item">
+                <p>Period:</p>
+                <span id="periodNumber" class="timer">Loading...</span>
+            </div>
+            <div class="info-item">
+                <p>Countdown:</p>
+                <span id="countdown" class="timer">00:00</span>
+            </div>
+        </div>
+
+        <div id="resultChart" class="chart">
+            <h3>Result Tracker</h3>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Period</th>
+                        <th>Result</th>
+                    </tr>
+                </thead>
+                <tbody id="chartBody"></tbody>
+            </table>
+        </div>
+    </div>
+
+    <script>
+        // JavaScript code (same as the corrected version from my previous response)
+        let lastPeriod = null;
+        let resultHistory = [];
+        const possibleResults = ["SMALL 0", "SMALL 1", "SMALL 2", "SMALL 3", "SMALL 4", "BIG 5", "BIG 6", "BIG 7", "BIG 8", "BIG 9"];
+
+        function updateTime() {
+            const currentTime = new Date();
+            const formattedTime = currentTime.toLocaleTimeString();
+            document.getElementById('timeDisplay').textContent = `Current Time: ${formattedTime}`;
+        }
+
+        function updatePeriodAndCountdown() {
+            const now = new Date();
+            const minutes = now.getMinutes();
+            const totalMinutes = now.getHours() * 60 + minutes;
+            const periodNumber = now.toISOString().slice(0, 10).replace(/-/g, "") + (10001 + totalMinutes).toString().padStart(4, '0');
+
+            document.getElementById('periodNumber').textContent = `Period: ${periodNumber}`;
+
+            const remainingSeconds = 60 - now.getSeconds();
+            const formattedCountdown = `${String(Math.floor(remainingSeconds / 60)).padStart(2, '0')}:${String(remainingSeconds % 60).padStart(2, '0')}`;
+            document.getElementById('countdown').textContent = `Countdown: ${formattedCountdown}`;
+
+            if (periodNumber !== lastPeriod) {
+                lastPeriod = periodNumber;
+                generateAndDisplayResult(periodNumber);
+            }
+        }
+
+        function generateAndDisplayResult(periodNumber) {
+            const actualResult = possibleResults[Math.floor(Math.random() * possibleResults.length)];
+            document.getElementById('result').textContent = actualResult;
+
+            resultHistory.push({ period: periodNumber, result: actualResult });
+            updateChart();
+
+            const resultElement = document.getElementById('result');
+            if (actualResult.startsWith("BIG")) {
+                resultElement.classList.remove("small-result");
+                resultElement.classList.add("big-result");
+            } else {
+                resultElement.classList.remove("big-result");
+                resultElement.classList.add("small-result");
+            }
+        }
+
+        function updateChart() {
+            const chartBody = document.getElementById('chartBody');
+            chartBody.innerHTML = "";
+            resultHistory.forEach(entry => {
+                const row = chartBody.insertRow();
+                const periodCell = row.insertCell();
+                periodCell.textContent = entry.period;
+                const resultCell = row.insertCell();
+                resultCell.textContent = entry.result;
+
+                resultCell.classList.add("orange");
+
+                if (entry.result.startsWith("BIG")) {
+                    resultCell.classList.add("big-result");
+                } else {
+                    resultCell.classList.add("small-result");
+                }
+                resultCell.classList.toggle("win", entry.result.startsWith("BIG"));
+                resultCell.classList.toggle("lose", !entry.result.startsWith("BIG"));
+            });
+        }
+
+        function updateGameLoop() {
+            updateTime();
+            updatePeriodAndCountdown();
+        }
+
+        function initializeGame() {
+            updateTime();
+            updatePeriodAndCountdown();
+            setInterval(updateGameLoop, 1000);
+        }
+
+        window.addEventListener('DOMContentLoaded', initializeGame);
+    </script>
+</body>
+</html>
